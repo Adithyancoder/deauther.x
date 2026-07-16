@@ -1,4 +1,6 @@
 
+git clone https://github.com/Adithyan-R-14/D.py.git
+
 cd D.py
 
 chmod +x ALL.py
