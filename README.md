@@ -1,8 +1,8 @@
 
 cd D.py
 
-chmod +x D.py
+chmod +x ALL.py
 
-sudo cp D.py /usr/local/bin/vopi
+sudo cp ALL.py /usr/local/bin/vopi
 
 sudo chmod +x /usr/local/bin/vopi
