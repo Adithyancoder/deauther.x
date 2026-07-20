@@ -1,10 +1,10 @@
 
-git clone https://github.com/Adithyan-R-14/D.py.git
+git clone https://github.com/Adithyan-R-14/deauther.x.git
 
-cd D.py
+cd deauther.x
 
-chmod +x ALL.py
+chmod +x deauth.py
 
-sudo cp ALL.py /usr/local/bin/vopi
+sudo cp deauth.py /usr/local/bin/crack.wifi
 
-sudo chmod +x /usr/local/bin/vopi
+sudo chmod +x /usr/local/bin/crack.wifi
