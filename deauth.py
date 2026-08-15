@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# (Part 7)  1-colour 2-signal.bar 3-canon-count 4-banner 5- mine.ui 6-automatic 7-manual
+# (Part 7)  1-colour 2-signal.bar 3-canon-count 4-banner 5- MAIN 6-automatic 7-manual
 
 
 #  clear():              clear ui
@@ -16,6 +16,8 @@ import re
 import sys
 from pathlib import Path
 import threading
+import random
+
  
  #      PART 1
  #      COLOUR 
@@ -29,7 +31,8 @@ class Colors:
     W = '\033[1;37m'   
     N = '\033[0m'
     BOLD = '\033[1m'
-
+    DIM = "\033[2m"
+    
  #      PART 2
 #  CLEAR
 
@@ -56,33 +59,84 @@ def signal_bar(power):
     except:
         return "N/A"
 
+
  #      PART 4
 #    BIG SCANNING COUNTDOWN
 
 
-def big_countdown():
-    print(f"{Colors.Y}[*] SCANNING NETWORK...{Colors.N}\n")
-    for i in range(5, 0, -1):
-        width = 35
-        filled = int(width * (5 - i) / 5)
+def big_countdown(duration=5, label="SCANNING NETWORK"):
+    print(f"{Colors.Y}   [*] {label}...{Colors.N}\n")
+
+    width = 40
+    spinner = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+    steps = duration * 10  # update 10x per second for smoothness
+
+    for step in range(steps + 1):
+        progress = step / steps
+        filled = int(width * progress)
         bar = "█" * filled + "░" * (width - filled)
-        print(f"   [{bar}]  {i} seconds ", end="\r")
-        time.sleep(1)
-    print(f"{Colors.G}[+] SCAN COMPLETE!{' ' * 40}{Colors.N}\n")
+
+        remaining = duration - (step / 10)
+        spin_char = spinner[step % len(spinner)]
+
+        sys.stdout.write(
+            f"\r   {spin_char}  "
+            f"{bar}  "
+            f"{progress*100:5.1f}%  "
+            f"{max(remaining, 0):.1f}s   "
+        )
+        sys.stdout.flush()
+        time.sleep(0.1)
+
+    print(f"\n\n{Colors.G}   [+] SCAN COMPLETE ✓{' ' * 30}{Colors.N}\n")
 
 
 
  #      PART 5
-#      GAY VOPI BANNER
+#      GAY BANNER
+
 
 
 
 def print_banner():
     clear()
+
+    title = "      CARROT DEAUTHER"
+    glitch_chars = "!@#$%^&*<>/\\|▓▒░"
+    frames = 8
+    width = 64
+
+    for frame in range(frames):
+        clear()
+        reveal_ratio = frame / (frames - 1)
+        chars_locked = int(len(title) * reveal_ratio)
+
+        display = ""
+        for i, ch in enumerate(title):
+            if ch == " " or i < chars_locked:
+                display += ch
+            else:
+                display += random.choice(glitch_chars)
+
+        print(f"{Colors.C}{Colors.BOLD}")
+        print(f"\n{Colors.C}{Colors.BOLD}{'═' * width}{Colors.N}")
+        print(f"          {Colors.W}{Colors.BOLD}        {display}{Colors.N}")
+        print(f"{Colors.C}{Colors.BOLD}{'═' * width}{Colors.N}\n")
+        sys.stdout.flush()
+        time.sleep(0.06)
+
+    # Final clean frame (locked, no glitch)
+    clear()
     print(f"{Colors.C}{Colors.BOLD}")
-    print(f"\n{Colors.C}{Colors.BOLD}════════════════════════════════════════════════════════════{Colors.N}")
-    print(f"          {Colors.W}{Colors.BOLD}        WIFI DEAUTHER BY ADITHYAN {Colors.N}")
-    print(f"{Colors.C}{Colors.BOLD}════════════════════════════════════════════════════════════{Colors.N}\n")
+    print(f"\n{Colors.C}{Colors.BOLD}{'═' * width}{Colors.N}")
+    print(f"          {Colors.W}{Colors.BOLD}        {title}{Colors.N}")
+    print(f"{Colors.C}{Colors.BOLD}{'═' * width}{Colors.N}\n")
+
+
+
+
+
+
 
 def prin7t_banner():
     clear()
@@ -209,7 +263,7 @@ if mode == "1":
 #       print_banner()
         print(f"{Colors.C}{Colors.BOLD}")
         print(f"\n{Colors.C}{Colors.BOLD}════════════════════════════════════════════════════════════════════════════════{Colors.N}")
-        print(f"          {Colors.W}{Colors.BOLD}        WIFI DEAUTHER BY ADITHYAN {Colors.N}")
+        print(f"          {Colors.W}{Colors.BOLD}            CARROT DEAUTHER {Colors.N}")
         print(f"{Colors.C}{Colors.BOLD}════════════════════════════════════════════════════════════════════════════════{Colors.N}\n")
         print("═" * 80)
         for i, (bssid, ch, essid, power) in enumerate(networks, 1):
@@ -421,4 +475,4 @@ else:
        
        
        
-       ## the end
+       ## the end of hacking 🤣
